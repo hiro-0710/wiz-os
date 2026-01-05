@@ -23,12 +23,15 @@ export default function Home() {
     gaze: { x: null as number | null, y: null as number | null },
   });
 
+  // 🔥 backend の mode API を localhost → Railway に変更
   useEffect(() => {
-    fetch(`http://localhost:8000/mode/${mode}`, { method: "POST" }).catch(
-      console.error
-    );
+    const api = process.env.NEXT_PUBLIC_WIZ_API_URL;
+    if (!api) return;
+
+    fetch(`${api}/mode/${mode}`, { method: "POST" }).catch(console.error);
   }, [mode]);
 
+  // 🔥 WebSocket の reasoning / state を UI に反映
   useEffect(() => {
     if (messages.length === 0) return;
 
@@ -47,9 +50,11 @@ export default function Home() {
       }
       if (state) {
         setLatestStatus(state.status ?? "idle");
+
         if (state.mode && state.mode !== mode) {
           setMode(state.mode as Mode);
         }
+
         if (state.vision) {
           setLatestVision((prev) => ({
             ...prev,
