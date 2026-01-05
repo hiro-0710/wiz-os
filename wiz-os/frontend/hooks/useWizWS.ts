@@ -2,8 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+export interface WizMessage {
+  type: string;
+  [key: string]: any;
+}
+
 export function useWizWS() {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<WizMessage[]>([]);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -34,4 +39,3 @@ export function useWizWS() {
 
   return { messages, send, connected };
 }
-
