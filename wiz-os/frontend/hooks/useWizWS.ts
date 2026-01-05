@@ -2,46 +2,36 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export type WizMessage = {
-  type: string;
-  [key: string]: any;
-};
-
 export function useWizWS() {
-  const [messages, setMessages] = useState<WizMessage[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [connected, setConnected] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8000/ws");
-    wsRef.current = socket;
+    const url = process.env.NEXT_PUBLIC_WIZ_BACKEND_URL!;
+    const ws = new WebSocket(url);
 
-    socket.onopen = () => {
-      setConnected(true);
-    };
+    socketRef.current = ws;
 
-    socket.onmessage = (event) => {
+    ws.onopen = () => setConnected(true);
+    ws.onclose = () => setConnected(false);
+
+    ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         setMessages((prev) => [...prev, data]);
       } catch (e) {
-        console.warn("invalid WS message", e);
+        console.error("WS parse error:", e);
       }
     };
 
-    socket.onclose = () => {
-      setConnected(false);
-    };
-
-    return () => {
-      socket.close();
-    };
+    return () => ws.close();
   }, []);
 
   const send = (text: string) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-    wsRef.current.send(text);
+    socketRef.current?.send(JSON.stringify({ text }));
   };
 
   return { messages, send, connected };
 }
+
